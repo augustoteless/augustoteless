@@ -1,5 +1,5 @@
 - 👋 Hi, I’m @augustoteless
-- ambitious accountant always learning more about python
+- I'm an ambitious accountant always learning more about python
 
 <!---
 augustoteless/augustoteless is a ✨ special ✨ repository because its `README.md` (this file) appears on your GitHub profile.
