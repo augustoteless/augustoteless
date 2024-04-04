@@ -1,0 +1,153 @@
+##Web scraping gerencial 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.common.action_chains import ActionChains
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import Select
+from selenium.webdriver.common.keys import Keys
+from selenium.common.exceptions import StaleElementReferenceException
+import time
+import os
+import shutil
+import glob
+
+
+# Configurar as opções do Chrome
+cService = webdriver.ChromeService(executable_path='*********')
+driver = webdriver.Chrome(service=cService)
+
+
+username = "*********"
+senha = "*********"
+
+
+url = '*********'
+driver.get(url)
+
+#entra na pagina e bota login e senha e clica pra entrar
+driver.find_element(By.NAME, "loginForm:userLoginInput:campo").send_keys(username)
+driver.find_element(By.NAME, "loginForm:userPasswordInput").send_keys(senha)
+driver.find_element(By.CSS_SELECTOR, ".btn-lg").click()
+driver.maximize_window()
+try:
+    menu_relatorios_button = WebDriverWait(driver, 10).until(
+        EC.presence_of_element_located((By.XPATH, '//*[@id="menuRelatoriosButton"]'))
+    )
+    ActionChains(driver).move_to_element(menu_relatorios_button).perform()
+
+    # Aguardar até que o segundo elemento seja visível (menu suspenso)
+    submenu_relatorios = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.XPATH, '//*[@id="dropdownMenuRelatorios"]/li[2]/a'))
+    )
+
+    # Movimentar o mouse sobre o segundo elemento
+    ActionChains(driver).move_to_element(submenu_relatorios).perform()
+
+    # Aguardar até que o terceiro elemento seja visível (subsubmenu)
+    subsubmenu_relatorio = WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.XPATH, '//*[@id="mainForm:j_id_62:1:j_id_6n:0:j_id_82"]'))
+    )
+
+    # Realizar a ação desejada no terceiro elemento (por exemplo, clicar)
+    subsubmenu_relatorio.click()
+
+except Exception as e:
+    print(f"Erro: {e}")
+
+#____________________________Botando a data final de hoje
+
+WebDriverWait(driver, 10).until(
+    EC.visibility_of_element_located((By.XPATH, '//*[@id="mainForm:calendarDateEnd:campoPopupButton"]'))
+).click()
+
+WebDriverWait(driver, 10).until(
+    EC.element_to_be_clickable((By.XPATH, '//*[@id="mainForm:calendarDateEnd:campoFooter"]/table/tbody/tr/td[5]/div'))
+).click()
+
+#____________________________Selecionando Abertura
+
+element = WebDriverWait(driver, 10).until(
+    EC.element_to_be_clickable((By.XPATH, '//*[@id="mainForm:headerValuePositionType:firstSelect"]/option'))
+)
+actions = ActionChains(driver)
+actions.double_click(element).perform()
+
+
+
+try:
+    WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.XPATH, '//*[@id="mainForm:idPortfolioGroupImage"]'))
+    ).click()
+except StaleElementReferenceException:
+    # Se ocorrer uma exceção, tentar encontrar o elemento novamente e clicar nele
+    WebDriverWait(driver, 10).until(
+        EC.visibility_of_element_located((By.XPATH, '//*[@id="mainForm:idPortfolioGroupImage"]'))
+    ).click()
+
+
+#clicar na PRIMEIRA OPÇÃO
+element = driver.find_element(By.XPATH,'//*[@id="mainForm:idPortfolioGroupPickList:firstSelect"]/option[1]')
+WebDriverWait(driver, 10)
+actions = ActionChains(driver)
+WebDriverWait(driver, 10)
+actions.double_click(element).perform()
+WebDriverWait(driver, 10)
+driver.find_element(By.XPATH,'//*[@id="mainForm:idPortfolioGroupBotaoOk"]').click()
+WebDriverWait(driver, 10)
+
+#passar os fundos selecionados para a direita
+#_____________________________________________________________________
+portfolio_include_all = WebDriverWait(driver, 10).until(
+    EC.visibility_of_element_located((By.ID, 'mainForm:portfolioPickList:includeAll'))
+)
+
+# Rolar até o elemento
+portfolio_include_all.location_once_scrolled_into_view
+
+# Clicar no elemento usando ação de clique do mouse
+ActionChains(driver).click(portfolio_include_all).perform()
+
+os.remove("amplis.zip")
+#_____________________________________________________________________
+# dropdown
+dropdown = driver.find_element(By.ID, 'mainForm:saida:campo')
+select = Select(dropdown)
+select.select_by_visible_text("CSV")
+
+
+WebDriverWait(driver, 10)
+#clicando pra gerar
+gerando = driver.find_element(By.XPATH,'//*[@id="mainForm:confirmButton"]/i')
+gerando.click()
+
+time.sleep(2)
+
+download_folder = "*******" 
+list_of_files = glob.glob(download_folder + "\\*")
+latest_file = max(list_of_files, key=os.path.getctime)
+new_location = r"*******"
+
+shutil.copy(latest_file, new_location)
+
+historical_folder = os.path.join(os.path.dirname(new_location), "*******")
+
+import datetime
+
+# Criando a pasta "*******" se ela não existir
+if not os.path.exists(historical_folder):
+    os.makedirs(historical_folder)
+
+# Adicionando a data e hora atual ao nome do arquivo
+timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M")
+new_filename = f"*******{timestamp}.zip"
+
+# Construindo o novo caminho completo para o arquivo na pasta histórica
+new_historical_location = os.path.join(historical_folder, new_filename)
+
+# Movendo o arquivo mais recente para a pasta histórica com o novo nome
+shutil.move(latest_file, new_historical_location)
+
+# Fechar o navegador no final
+driver.quit()
