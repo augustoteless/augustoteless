@@ -1,4 +1,4 @@
-- 👋 Hi, I’m @augustoteless
+- Hi, I’m @augustoteless
 - I'm an ambitious accountant always learning more about python
 
 <!---
